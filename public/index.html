@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banana Rush</title>
+  <meta name="description" content="An arcade puzzle game powered by the Banana API.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#f4efe3">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="paper" aria-hidden="true"></div>
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker__track">
+      <span>PEEL IT ✦ SOLVE IT ✦ BEAT THE CLOCK ✦ 0–9 ✦ KEEP YOUR STREAK ✦ PEEL IT ✦ SOLVE IT ✦ BEAT THE CLOCK ✦ 0–9 ✦ KEEP YOUR STREAK ✦ </span>
+      <span>PEEL IT ✦ SOLVE IT ✦ BEAT THE CLOCK ✦ 0–9 ✦ KEEP YOUR STREAK ✦ PEEL IT ✦ SOLVE IT ✦ BEAT THE CLOCK ✦ 0–9 ✦ KEEP YOUR STREAK ✦ </span>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <a class="logo" href="/" aria-label="Banana Rush home"><span class="logo__mark" aria-hidden="true">🍌</span>Banana<br>Rush</a>
+    <div class="topbar__right" id="session" hidden>
+      <button id="btn-sound" class="icon-btn" type="button" aria-pressed="true" aria-label="Sound on">🔊</button>
+      <div class="chip"><span id="chip-avatar" aria-hidden="true"></span><span id="chip-name"></span></div>
+      <button id="btn-logout" class="link-btn" type="button">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- AUTH -->
+    <section id="screen-auth" class="screen screen--auth" hidden>
+      <div class="auth-intro">
+        <p class="eyebrow">Arcade puzzle · powered by Banana API</p>
+        <h1 class="display">Peel the <mark>puzzle.</mark><br>Beat the clock.</h1>
+        <p>Every round shows a banana puzzle. Work out the digit from 0 to 9 and tap it before the peel runs out. Faster answers and longer streaks score more.</p>
+        <ul class="rules">
+          <li>3 lives. A wrong answer or a timeout costs one.</li>
+          <li>2 skips per run. Skipping resets your streak.</li>
+          <li>Every 5 solves the clock gets shorter.</li>
+        </ul>
+      </div>
+
+      <div class="card auth-card">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" role="tab" id="tab-login" aria-selected="true" aria-controls="auth-form" type="button">Log in</button>
+          <button class="tab" role="tab" id="tab-register" aria-selected="false" aria-controls="auth-form" type="button">Create account</button>
+        </div>
+        <form id="auth-form" class="form" autocomplete="on" novalidate>
+          <label for="f-username">Username</label>
+          <input id="f-username" name="username" type="text" autocomplete="username" maxlength="16" required>
+          <label for="f-password">Password</label>
+          <input id="f-password" name="password" type="password" autocomplete="current-password" minlength="6" maxlength="72" required>
+          <fieldset id="avatar-picker" class="avatars" hidden>
+            <legend>Pick your monkey</legend>
+            <div id="avatar-options" class="avatars__grid"></div>
+          </fieldset>
+          <p id="auth-error" class="form__error" role="alert" hidden></p>
+          <button id="auth-submit" class="btn btn--primary" type="submit">Log in</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen screen--home" hidden>
+      <div class="home-main">
+        <div class="card hero">
+          <div class="hero__inner">
+            <span class="hero__sticker" aria-hidden="true">🍌</span>
+            <p class="hero__hello" id="hello"></p>
+            <h2 class="display hero__title">Ready for another run?</h2>
+            <button id="btn-play" class="btn btn--primary btn--xl" type="button">Start run</button>
+            <p id="home-error" class="form__error" role="alert" hidden></p>
+          </div>
+        </div>
+
+        <dl class="stats" id="stats"></dl>
+
+        <section aria-labelledby="h-badges">
+          <h3 id="h-badges" class="panel-title">Badges</h3>
+          <ul id="badges" class="badges"></ul>
+        </section>
+      </div>
+
+      <aside class="home-side">
+        <section class="panel" aria-labelledby="h-board">
+          <h3 id="h-board" class="panel-title">Top monkeys</h3>
+          <ol id="leaderboard" class="board"></ol>
+        </section>
+        <section class="panel" aria-labelledby="h-feed">
+          <h3 id="h-feed" class="panel-title">Live from the jungle</h3>
+          <ul id="feed" class="feed" aria-live="polite"></ul>
+        </section>
+      </aside>
+    </section>
+
+    <!-- PLAY -->
+    <section id="screen-play" class="screen screen--play" hidden>
+      <div class="hud" aria-label="Run status">
+        <div class="hud__cell"><span class="hud__label">Score</span><span class="hud__value" id="hud-score">0</span></div>
+        <div class="hud__cell"><span class="hud__label">Level</span><span class="hud__value" id="hud-level">1</span></div>
+        <div class="hud__cell"><span class="hud__label">Streak</span><span class="hud__value" id="hud-streak">0</span><span class="hud__sub" id="hud-mult"></span></div>
+        <div class="hud__cell hud__cell--lives"><span class="hud__label">Lives</span><span class="lives" id="hud-lives" aria-live="polite"></span></div>
+      </div>
+
+      <div class="card stage" id="stage">
+        <div class="timer" id="timer" data-state="ok" role="progressbar" aria-label="Time left" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+          <div class="timer__fill" id="timer-fill"></div>
+        </div>
+        <div class="puzzle" id="puzzle">
+          <img id="puzzle-img" alt="Banana puzzle. Work out the missing digit." hidden>
+          <p id="puzzle-status" class="puzzle__status">Peeling a puzzle…</p>
+          <div id="flash" class="flash" data-kind="" aria-live="assertive"></div>
+        </div>
+        <div class="numpad" id="numpad" role="group" aria-label="Answer digits"></div>
+        <div class="actions">
+          <button id="btn-skip" class="btn btn--ghost" type="button">Skip (<span id="skip-count">2</span> left)</button>
+          <button id="btn-quit" class="btn btn--ghost" type="button">End run</button>
+        </div>
+        <p class="hint">Tip: use your keyboard. Press 0 to 9 to answer, S to skip.</p>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="over" class="over">
+    <h2 class="display" id="over-title">Run over</h2>
+    <p class="over__badge" id="over-badge" hidden>New personal best!</p>
+    <p class="over__score" id="over-score">0</p>
+    <dl class="over__stats">
+      <div><dt>Level</dt><dd id="over-level">1</dd></div>
+      <div><dt>Solved</dt><dd id="over-correct">0</dd></div>
+      <div><dt>Best streak</dt><dd id="over-streak">0</dd></div>
+    </dl>
+    <div class="over__actions">
+      <button id="over-again" class="btn btn--primary" type="button">Play again</button>
+      <button id="over-home" class="btn btn--ghost" type="button">Back home</button>
+    </div>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
